@@ -1,0 +1,39 @@
+name: Push to preprod
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    environment: preprod
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Scaleway Container Registry
+        run: |
+          echo "${{ secrets.SCALEWAY_SECRET_KEY }}" | docker login rg.fr-par.scw.cloud/${{ secrets.SCALEWAY_REGISTRY_ID }} -u nologin --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build -t derivatives:dev-latest .
+
+      - name: Tag Docker image
+        run: |
+          docker tag derivatives:dev-latest rg.fr-par.scw.cloud/${{ secrets.SCALEWAY_REGISTRY_ID }}/derivatives:dev-latest
+
+      - name: Push Docker image
+        run: |
+          docker push rg.fr-par.scw.cloud/${{ secrets.SCALEWAY_REGISTRY_ID }}/derivatives:dev-latest
+
+      - name: Deploy to Serverless Container
+        run: |
+          curl -X POST https://api.scaleway.com/containers/v1beta1/regions/fr-par/containers/${{ secrets.SCALEWAY_CONTAINER_ID }}/deploy \
+            -H "X-Auth-Token: ${{ secrets.SCALEWAY_SECRET_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'

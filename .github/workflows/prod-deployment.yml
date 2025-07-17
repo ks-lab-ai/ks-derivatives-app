@@ -1,0 +1,58 @@
+name: Push to prod
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Scaleway Container Registry
+        run: |
+          echo "${{ secrets.SCALEWAY_SECRET_KEY }}" | docker login rg.fr-par.scw.cloud/${{ secrets.SCALEWAY_REGISTRY_ID }} -u nologin --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build -t derivatives:prod-latest .
+
+      - name: Tag Docker image
+        run: |
+          docker tag derivatives:prod-latest rg.fr-par.scw.cloud/${{ secrets.SCALEWAY_REGISTRY_ID }}/derivatives:prod-latest
+
+      - name: Push Docker image
+        run: |
+          docker push rg.fr-par.scw.cloud/${{ secrets.SCALEWAY_REGISTRY_ID }}/derivatives:prod-latest
+
+  deploy-to-prod:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+    permissions:
+      issues: write
+    steps:
+      - name: Wait for approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: pradierh
+          minimum-approvals: 1
+          issue-title: 'Approval needed for deploying to production'
+          issue-body: 'Please approve or deny the deployment of version to production.'
+          exclude-workflow-initiator-as-approver: false
+
+      - name: Deploy to Serverless Container
+        run: |
+          curl -X POST https://api.scaleway.com/containers/v1beta1/regions/fr-par/containers/${{ secrets.SCALEWAY_CONTAINER_ID }}/deploy \
+            -H "X-Auth-Token: ${{ secrets.SCALEWAY_SECRET_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'

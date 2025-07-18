@@ -18,13 +18,12 @@ jobs:
       - name: Login to Scaleway Container Registry
         run: |
           echo "${{ secrets.SCALEWAY_SECRET_KEY }}" | docker login rg.fr-par.scw.cloud/${{ secrets.SCALEWAY_REGISTRY_ID }} -u nologin --password-stdin
-
       - name: Build Docker image
         run: |
           docker build \
           --build-arg NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }} \
           --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} \
-          -t derivatives .
+          -t derivatives:dev-latest .
 
       - name: Tag Docker image
         run: |

@@ -48,7 +48,7 @@ export function BackofficeHeader({ showMenuButton, onMenuClick }: BackofficeHead
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="flex h-16 items-center px-4 gap-4">
         {showMenuButton && (
           <Button
@@ -61,14 +61,14 @@ export function BackofficeHeader({ showMenuButton, onMenuClick }: BackofficeHead
           </Button>
         )}
         
-        <h1 className="text-xl font-semibold text-gray-900">
+        <h1 className="text-xl font-semibold text-foreground font-din">
           {t('backoffice.title')}
         </h1>
         
         <div className="flex-1" />
 
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-muted-foreground">
             {user?.role === 'admin' ? t('common.admin') : t('common.moderator')}
           </span>
           

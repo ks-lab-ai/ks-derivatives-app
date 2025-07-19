@@ -36,16 +36,16 @@ export function CourseRegistration({
 
   async function handleRegistration() {
     if (userSubscription === 'free') {
-      // Check if this is the first course (free users get access to first course only)
-      const { data: courses } = await supabase
-        .from('courses')
+      // Check if this is the first module (free users get access to first module only)
+      const { data: modules } = await supabase
+        .from('modules')
         .select('id')
         .eq('is_published', true)
         .order('order_index', { ascending: true })
         .limit(1)
 
-      if (courses && courses[0]?.id !== courseId) {
-        // Show subscription dialog for non-first courses
+      if (modules && modules[0]?.id !== courseId) {
+        // Show subscription dialog for non-first modules
         setDialogOpen(true)
         return
       }
@@ -57,19 +57,19 @@ export function CourseRegistration({
       if (!user) return
 
       if (isRegistered) {
-        // Unregister from course
+        // Unregister from module
         await supabase
-          .from('course_registrations')
+          .from('module_registrations')
           .delete()
           .eq('user_id', user.id)
-          .eq('course_id', courseId)
+          .eq('module_id', courseId)
       } else {
-        // Register to course
+        // Register to module
         await supabase
-          .from('course_registrations')
+          .from('module_registrations')
           .insert({
             user_id: user.id,
-            course_id: courseId
+            module_id: courseId
           })
       }
 

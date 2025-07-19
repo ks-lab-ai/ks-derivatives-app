@@ -11,7 +11,7 @@ function BackofficeLayoutContent({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen overflow-hidden bg-background">
       {/* Desktop Sidebar - Fixed width, not collapsible */}
       <div className="hidden md:flex md:w-64 md:flex-col">
         <BackofficeSidebar />
@@ -23,7 +23,7 @@ function BackofficeLayoutContent({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <BackofficeHeader showMenuButton onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <main className="flex-1 overflow-y-auto bg-background">
           <div className="container mx-auto px-4 py-6 md:px-8">
             {children}
           </div>

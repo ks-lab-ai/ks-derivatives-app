@@ -17,7 +17,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface Course {
+interface Module {
   id: string;
   title: string;
   is_published: boolean;
@@ -32,7 +32,7 @@ export function Sidebar({ className }: SidebarProps) {
   const { t } = useTranslation();
   const pathname = usePathname();
   const { isCollapsed, toggleSidebar } = useSidebar();
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const supabase = createClient();
@@ -40,24 +40,24 @@ export function Sidebar({ className }: SidebarProps) {
   const shouldShowText = !isCollapsed;
 
   useEffect(() => {
-    loadCourses();
+    loadModules();
   }, []);
 
-  async function loadCourses() {
+  async function loadModules() {
     try {
       const { data, error } = await supabase
-        .from("courses")
+        .from("modules")
         .select("id, title, is_published, picture_url")
         .eq("is_published", true)
         .order("order_index", { ascending: true });
 
       if (error) {
-        console.error("Error loading courses:", error);
+        console.error("Error loading modules:", error);
       } else {
-        setCourses(data || []);
+        setModules(data || []);
       }
     } catch (error) {
-      console.error("Error loading courses:", error);
+      console.error("Error loading modules:", error);
     } finally {
       setLoading(false);
     }
@@ -65,12 +65,12 @@ export function Sidebar({ className }: SidebarProps) {
 
   const navItems = [
     {
-      title: t("courses.courses"),
+      title: t("common.modules"),
       items: loading
         ? []
-        : courses.map((course) => ({
-            name: course.title,
-            href: `/courses/${course.id}`,
+        : modules.map((module) => ({
+            name: module.title,
+            href: `/modules/${module.id}`,
             icon: "mdi:book-open-page-variant",
           })),
     },

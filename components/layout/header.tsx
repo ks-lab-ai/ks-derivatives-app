@@ -58,7 +58,7 @@ export function Header({ showMenuButton, onMenuClick }: HeaderProps) {
       if (path === "dashboard") return;
 
       let name = path;
-      if (path === "courses") name = t("common.courses");
+      if (path === "modules") name = t("common.modules");
       else if (path === "profile") name = t("common.profile");
       else if (path === "settings") name = t("common.settings");
       else if (path === "progression") name = t("common.progression");
@@ -137,48 +137,77 @@ export function Header({ showMenuButton, onMenuClick }: HeaderProps) {
     setUnreadCount((prev) => Math.max(0, prev - 1));
   }
 
+  const isActiveRoute = (path: string) => pathname === path;
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-gray-50 dark:from-gray-900 dark:to-gray-800">
-      <div className="flex h-16 items-center px-4 gap-4">
-        {showMenuButton && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onMenuClick}
-            className="md:hidden"
-          >
-            <Icon icon="mdi:menu" className="h-5 w-5" />
-          </Button>
-        )}
+    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border">
+      <div className="container mx-auto">
+        <div className="flex h-16 items-center px-4 gap-6">
+          {/* Logo */}
+          <Link href="/dashboard" className="flex items-center">
+            <img src="/logo.png" alt="Derivatives" className="h-8 w-auto" />
+          </Link>
 
-        {/* Breadcrumbs */}
-        <nav className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
-          {getBreadcrumbs().map((breadcrumb, index) => (
-            <div key={breadcrumb.href} className="flex items-center">
-              {index > 0 && (
-                <Icon icon="mdi:chevron-right" className="h-4 w-4 mx-1" />
+          {/* Dashboard Navigation */}
+          <nav className="flex items-center space-x-1 text-sm">
+            <Link
+              href="/dashboard"
+              className={cn(
+                "px-3 py-2 rounded-md font-medium transition-colors font-din",
+                isActiveRoute("/dashboard")
+                  ? "text-foreground bg-secondary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
               )}
-              {index === getBreadcrumbs().length - 1 ? (
-                <span className="text-gray-900 dark:text-white font-medium">
-                  {breadcrumb.name}
-                </span>
-              ) : (
-                <Link
-                  href={breadcrumb.href}
-                  className="hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                  {breadcrumb.name}
-                </Link>
+            >
+              {t("common.dashboard")}
+            </Link>
+          </nav>
+
+          <div className="flex-1" />
+
+          {/* Right Navigation */}
+          <nav className="flex items-center space-x-1 text-sm">
+            <Link
+              href="/modules"
+              className={cn(
+                "px-3 py-2 rounded-md font-medium transition-colors font-din",
+                isActiveRoute("/modules")
+                  ? "text-foreground bg-secondary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
               )}
-            </div>
-          ))}
-        </nav>
+            >
+              {t("common.modules")}
+            </Link>
+            <Link
+              href="/reviews"
+              className={cn(
+                "px-3 py-2 rounded-md font-medium transition-colors font-din",
+                isActiveRoute("/reviews")
+                  ? "text-foreground bg-secondary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              )}
+            >
+              {t("common.reviews")}
+            </Link>
+            <Link
+              href="/discord"
+              className={cn(
+                "px-3 py-2 rounded-md font-medium transition-colors font-din",
+                isActiveRoute("/discord")
+                  ? "text-foreground bg-secondary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              )}
+            >
+              {t("common.discord")}
+            </Link>
+          </nav>
 
-        <div className="flex-1" />
+          {/* Spacing */}
+          <div className="mx-4" />
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
               <Icon icon="mdi:bell" className="h-5 w-5" />
               {unreadCount > 0 && (
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center">
@@ -208,17 +237,17 @@ export function Header({ showMenuButton, onMenuClick }: HeaderProps) {
                       key={notification.id}
                       className={cn(
                         "p-3 rounded-lg cursor-pointer transition-colors",
-                        notification.is_read ? "bg-gray-50" : "bg-blue-50"
+                        notification.is_read ? "bg-secondary/50" : "bg-blue-500/20"
                       )}
                       onClick={() => markAsRead(notification.id)}
                     >
                       <h4 className="font-medium text-sm">
                         {notification.title}
                       </h4>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-muted-foreground mt-1">
                         {notification.message}
                       </p>
-                      <p className="text-xs text-gray-400 mt-2">
+                      <p className="text-xs text-muted-foreground/60 mt-2">
                         {new Date(notification.created_at).toLocaleDateString(
                           "fr-FR"
                         )}
@@ -273,7 +302,7 @@ export function Header({ showMenuButton, onMenuClick }: HeaderProps) {
             {(user?.role === "admin" || user?.role === "moderator") && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push("/backoffice/courses")}>
+                <DropdownMenuItem onClick={() => router.push("/backoffice/modules")}>
                   <Icon icon="mdi:shield-crown" className="mr-2 h-4 w-4" />
                   <span>Backoffice</span>
                 </DropdownMenuItem>
@@ -294,6 +323,7 @@ export function Header({ showMenuButton, onMenuClick }: HeaderProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </div>
     </header>
   );

@@ -38,7 +38,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "DIN Next Rounded", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "DIN Next Rounded", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -73,6 +74,27 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  
+  /* Marquee animations */
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes marquee-vertical {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
 }
 
 :root {
@@ -159,7 +181,7 @@
   h4,
   h5,
   h6 {
-    font-family: "DIN Next Rounded", ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-heading);
     font-weight: 600;
   }
 
@@ -168,7 +190,7 @@
   .dialog-title,
   .button,
   .nav-item {
-    font-family: "DIN Next Rounded", ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-heading);
   }
 }
 
@@ -191,6 +213,22 @@
   .font-din-bold {
     font-family: "DIN Next Rounded", ui-sans-serif, system-ui, sans-serif;
     font-weight: 700;
+  }
+
+  /* Title font class - using DIN Next Rounded until custom font is added */
+  .font-title {
+    font-family: "DIN Next Rounded", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  /* Primary font for main titles */
+  .font-primary {
+    font-family: var(--font-primary), "DIN Next Rounded", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   .shadow-soft {

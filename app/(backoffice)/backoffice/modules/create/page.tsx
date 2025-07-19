@@ -34,14 +34,14 @@ interface Category {
   name: string;
 }
 
-interface Module {
+interface Chapter {
   id: string;
   name: string;
   order_index: number;
   estimated_time_minutes: number;
 }
 
-export default function CreateCoursePage() {
+export default function CreateModulePage() {
   const { t } = useTranslation();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -51,9 +51,9 @@ export default function CreateCoursePage() {
 
   // Stepper state
   const [currentStep, setCurrentStep] = useState(1);
-  const [courseId, setCourseId] = useState<string | null>(null);
+  const [moduleId, setModuleId] = useState<string | null>(null);
 
-  // Course form state
+  // Module form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -65,10 +65,10 @@ export default function CreateCoursePage() {
   const [orderIndex, setOrderIndex] = useState(1);
   const [isPublished, setIsPublished] = useState(false);
 
-  // Modules state
-  const [modules, setModules] = useState<Module[]>([]);
-  const [showModuleDialog, setShowModuleDialog] = useState(false);
-  const [currentModule, setCurrentModule] = useState<Partial<Module>>({});
+  // Chapters state
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [showChapterDialog, setShowChapterDialog] = useState(false);
+  const [currentChapter, setCurrentChapter] = useState<Partial<Chapter>>({});
 
   useEffect(() => {
     loadUser();
@@ -120,7 +120,7 @@ export default function CreateCoursePage() {
 
       // Generate unique filename
       const fileExt = file.name.split(".").pop();
-      const fileName = `course-${Date.now()}-${Math.random()
+      const fileName = `module-${Date.now()}-${Math.random()
         .toString(36)
         .substring(2)}.${fileExt}`;
 
@@ -176,7 +176,7 @@ export default function CreateCoursePage() {
     }
   }
 
-  async function saveCourseBasicInfo() {
+  async function saveModuleBasicInfo() {
     if (!title || !categoryId || !difficulty) {
       alert(t("module.fillRequiredFields"));
       return;
@@ -189,11 +189,11 @@ export default function CreateCoursePage() {
       if (pictureFile) {
         finalPictureUrl = await uploadPicture(pictureFile);
         if (!finalPictureUrl) {
-          return; // Upload failed, stop course creation
+          return; // Upload failed, stop module creation
         }
       }
 
-      // Create module (formerly course)
+      // Create module
       const { data: module, error: moduleError } = await supabase
         .from("modules")
         .insert({
@@ -212,62 +212,62 @@ export default function CreateCoursePage() {
 
       if (moduleError) throw moduleError;
 
-      setCourseId(module.id);
+      setModuleId(module.id);
       // Redirect to module detail page instead of step 2
       router.push(`/backoffice/modules/${module.id}`);
     } catch (error) {
-      console.error("Error creating course:", error);
+      console.error("Error creating module:", error);
       alert(t("module.errorCreating"));
     } finally {
       setLoading(false);
     }
   }
 
-  async function createModule() {
-    if (!currentModule.name || !courseId) return;
+  async function createChapter() {
+    if (!currentChapter.name || !moduleId) return;
 
     try {
       const { data: createdChapter, error: chapterError } = await supabase
         .from("chapters")
         .insert({
-          module_id: courseId,
-          name: currentModule.name,
-          order_index: modules.length + 1,
-          estimated_time_minutes: currentModule.estimated_time_minutes || 0,
+          module_id: moduleId,
+          name: currentChapter.name,
+          order_index: chapters.length + 1,
+          estimated_time_minutes: currentChapter.estimated_time_minutes || 0,
         })
         .select()
         .single();
 
       if (chapterError) throw chapterError;
 
-      const newModule: Module = {
+      const newChapter: Chapter = {
         id: createdChapter.id,
         name: createdChapter.name,
         order_index: createdChapter.order_index,
         estimated_time_minutes: createdChapter.estimated_time_minutes,
       };
 
-      setModules([...modules, newModule]);
-      setCurrentModule({});
-      setShowModuleDialog(false);
+      setChapters([...chapters, newChapter]);
+      setCurrentChapter({});
+      setShowChapterDialog(false);
     } catch (error) {
-      console.error("Error creating module:", error);
+      console.error("Error creating chapter:", error);
       alert(t("module.errorCreating"));
     }
   }
 
-  async function deleteModule(moduleId: string) {
+  async function deleteChapter(chapterId: string) {
     try {
-      await supabase.from("chapters").delete().eq("id", moduleId);
+      await supabase.from("chapters").delete().eq("id", chapterId);
 
-      setModules(modules.filter((m) => m.id !== moduleId));
+      setChapters(chapters.filter((c) => c.id !== chapterId));
     } catch (error) {
       console.error("Error deleting chapter:", error);
     }
   }
 
-  async function finishCourseCreation() {
-    if (!courseId) return;
+  async function finishModuleCreation() {
+    if (!moduleId) return;
 
     setLoading(true);
     try {
@@ -276,12 +276,12 @@ export default function CreateCoursePage() {
         await supabase
           .from("modules")
           .update({ is_published: true })
-          .eq("id", courseId);
+          .eq("id", moduleId);
       }
 
       router.push("/backoffice/modules");
     } catch (error) {
-      console.error("Error finishing course creation:", error);
+      console.error("Error finishing module creation:", error);
       alert(t("module.errorCreating"));
     } finally {
       setLoading(false);
@@ -297,8 +297,8 @@ export default function CreateCoursePage() {
     { number: 2, title: t("backoffice.moduleChapters"), completed: false },
   ];
 
-  // Build preview course object - only use values, don't pass undefined
-  const previewCourse = {
+  // Build preview module object - only use values, don't pass undefined
+  const previewModule = {
     ...(title && { title }),
     ...(description && { description }),
     ...(categoryId &&
@@ -309,8 +309,8 @@ export default function CreateCoursePage() {
     ...(difficulty && { difficulty }),
     created_at: new Date().toISOString(),
     _count: {
-      course_modules: modules.length,
-      course_registrations: 0,
+      chapters: chapters.length,
+      module_registrations: 0,
     },
   };
 
@@ -374,7 +374,7 @@ export default function CreateCoursePage() {
         </div>
       </div>
 
-      {/* Step 1: Course Information */}
+      {/* Step 1: Module Information */}
       {currentStep === 1 && (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Form on the left (3/5 width) */}
@@ -554,7 +554,7 @@ export default function CreateCoursePage() {
             <h3 className="text-lg font-semibold text-foreground">{t("backoffice.preview")}</h3>
             <div className="scale-75 origin-top">
               <CoursePreviewCard
-                course={previewCourse}
+                course={previewModule}
                 userProgress={0}
                 completionRate={0}
                 isDisabled={true}
@@ -562,7 +562,7 @@ export default function CreateCoursePage() {
               />
             </div>
             <div className="flex justify-end">
-              <Button onClick={saveCourseBasicInfo} disabled={loading}>
+              <Button onClick={saveModuleBasicInfo} disabled={loading}>
                 {loading ? (
                   <Icon
                     icon="mdi:loading"
@@ -578,69 +578,69 @@ export default function CreateCoursePage() {
         </div>
       )}
 
-      {/* Step 2: Modules */}
+      {/* Step 2: Chapters */}
       {currentStep === 2 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              {t("backoffice.courseModules")}
-              <Button onClick={() => setShowModuleDialog(true)}>
+              {t("backoffice.moduleChapters")}
+              <Button onClick={() => setShowChapterDialog(true)}>
                 <Icon icon="mdi:plus" className="h-4 w-4 mr-2" />
-                {t("course.addModule")}
+                {t("chapter.addChapter")}
               </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {modules.length === 0 ? (
+            {chapters.length === 0 ? (
               <div className="text-center py-12">
                 <Icon
                   icon="mdi:book-outline"
                   className="h-16 w-16 text-gray-400 mx-auto mb-4"
                 />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {t("course.noModules")}
+                  {t("chapter.noChapters")}
                 </h3>
                 <p className="text-gray-500 mb-4">
-                  {t("course.addFirstModule")}
+                  {t("chapter.addFirstChapter")}
                 </p>
-                <Button onClick={() => setShowModuleDialog(true)}>
+                <Button onClick={() => setShowChapterDialog(true)}>
                   <Icon icon="mdi:plus" className="h-4 w-4 mr-2" />
-                  {t("course.addModule")}
+                  {t("chapter.addChapter")}
                 </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {modules.map((module) => (
+                {chapters.map((chapter) => (
                   <Card
-                    key={module.id}
+                    key={chapter.id}
                     className="hover:shadow-md transition-shadow"
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-2">
                         <Badge variant="outline">
-                          Module {module.order_index}
+                          Chapter {chapter.order_index}
                         </Badge>
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => deleteModule(module.id)}
+                          onClick={() => deleteChapter(chapter.id)}
                           className="h-6 w-6 text-red-500 hover:text-red-700"
                         >
                           <Icon icon="mdi:delete" className="h-4 w-4" />
                         </Button>
                       </div>
-                      <h4 className="font-medium mb-2">{module.name}</h4>
+                      <h4 className="font-medium mb-2">{chapter.name}</h4>
                       <p className="text-sm text-gray-500">
-                        {module.estimated_time_minutes} {t("common.minutes")}
+                        {chapter.estimated_time_minutes} {t("common.minutes")}
                       </p>
                     </CardContent>
                   </Card>
                 ))}
 
-                {/* Add Module Card */}
+                {/* Add Chapter Card */}
                 <Card
                   className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 border-gray-300"
-                  onClick={() => setShowModuleDialog(true)}
+                  onClick={() => setShowChapterDialog(true)}
                 >
                   <CardContent className="p-4 flex items-center justify-center h-full">
                     <div className="text-center">
@@ -649,7 +649,7 @@ export default function CreateCoursePage() {
                         className="h-8 w-8 text-gray-400 mx-auto mb-2"
                       />
                       <p className="text-gray-500 text-sm">
-                        {t("course.addModule")}
+                        {t("chapter.addChapter")}
                       </p>
                     </div>
                   </CardContent>
@@ -671,11 +671,11 @@ export default function CreateCoursePage() {
                     onCheckedChange={setIsPublished}
                   />
                   <Label htmlFor="isPublished">
-                    {t("course.publishCourse")}
+                    {t("module.publishModule")}
                   </Label>
                 </div>
 
-                <Button onClick={finishCourseCreation} disabled={loading}>
+                <Button onClick={finishModuleCreation} disabled={loading}>
                   {loading ? (
                     <Icon
                       icon="mdi:loading"
@@ -692,55 +692,55 @@ export default function CreateCoursePage() {
         </Card>
       )}
 
-      {/* Add Module Dialog */}
-      <Dialog open={showModuleDialog} onOpenChange={setShowModuleDialog}>
+      {/* Add Chapter Dialog */}
+      <Dialog open={showChapterDialog} onOpenChange={setShowChapterDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("course.addModule")}</DialogTitle>
+            <DialogTitle>{t("chapter.addChapter")}</DialogTitle>
             <DialogDescription>
-              {t("course.addModuleDescription")}
+              {t("chapter.addChapterDescription")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="moduleName">{t("course.moduleName")}</Label>
+              <Label htmlFor="chapterName">{t("chapter.chapterName")}</Label>
               <Input
-                id="moduleName"
-                value={currentModule.name || ""}
+                id="chapterName"
+                value={currentChapter.name || ""}
                 onChange={(e) =>
-                  setCurrentModule({ ...currentModule, name: e.target.value })
+                  setCurrentChapter({ ...currentChapter, name: e.target.value })
                 }
-                placeholder={t("course.moduleNamePlaceholder")}
+                placeholder={t("chapter.chapterNamePlaceholder")}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="estimatedTime">
-                {t("course.estimatedTimeMinutes")}
+                {t("chapter.estimatedTimeMinutes")}
               </Label>
               <Input
                 id="estimatedTime"
                 type="number"
-                value={currentModule.estimated_time_minutes || ""}
+                value={currentChapter.estimated_time_minutes || ""}
                 onChange={(e) =>
-                  setCurrentModule({
-                    ...currentModule,
+                  setCurrentChapter({
+                    ...currentChapter,
                     estimated_time_minutes: parseInt(e.target.value),
                   })
                 }
-                placeholder={t("course.defaultDurationPlaceholder")}
+                placeholder={t("chapter.defaultDurationPlaceholder")}
               />
             </div>
           </div>
           <div className="flex gap-3">
             <Button
               variant="outline"
-              onClick={() => setShowModuleDialog(false)}
+              onClick={() => setShowChapterDialog(false)}
             >
               {t("common.cancel")}
             </Button>
-            <Button onClick={createModule}>
+            <Button onClick={createChapter}>
               <Icon icon="mdi:plus" className="h-4 w-4 mr-2" />
-              {t("course.addModule")}
+              {t("chapter.addChapter")}
             </Button>
           </div>
         </DialogContent>
